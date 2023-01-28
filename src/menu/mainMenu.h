@@ -2,21 +2,21 @@
 #define mainMenu_h
 #include <Arduino.h>
 #include <LcdMenu.h>
+#include <generatemenu.h>
 
 #include "Outputs/Outputs.h"
 #include "Settings/Settings.h"
-void inputCallback(String value);
 
+void inputCallback(String value);
 MenuItem mainMenu[] = {
     ItemHeader(),
     ItemSubMenu("Settings", Settings),
-    ItemSubMenu("Outputs", Outputs),
+    ItemSubMenu("Outputs", mainMenu),
     ItemInput("wifi", "Wi-Fi", inputCallback),
-    MenuItem("Hello"),
-    MenuItem("szia"),
     ItemFooter()};
 void inputCallback(String value) {
     Serial.print(F("# "));
     Serial.println(value);
 }
+
 #endif  // MainMenu

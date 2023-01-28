@@ -2,15 +2,21 @@
 #define Output_struct_h
 
 #include <Arduino.h>
-typedef struct {
+#include <RTClib.h>
+struct Output{
     const uint32_t pin;
     boolean state;
-    char name[256];
+    const char* name;
+    uint32_t lastUpadateTime;
     void toggle() {
         digitalWrite(pin, state);
         state = !state;
+        lastUpadateTime = millis();
     }
-    void setName(const char* _name) { strcpy(name, _name); }
-} Output;
+    void setName(const char* _name) {
+        name = _name;
+    }
+    
+} ;
 Output _out[4] = {{46, LOW, "ceiling"}, {48, LOW, "fan"}, {50, LOW, "idk"}, {52, LOW, "asd"}};
 #endif  // Output_struct

@@ -47,7 +47,6 @@ RTC_DS3231 rtc;
 LcdMenu menu(LCD_ROWS, LCD_COLS);
 #include "menu/MainMenu.h"
 #endif
-
 Logger _log;
 
 unsigned long lastDebounceTime = 0;
@@ -109,12 +108,14 @@ RTC_BEGIN:
 
 #endif
 #ifdef LCD_MODULE
+    
     menu.setupLcdWithMenu(rs, rw, en, d0, d1, d2, d3, d4, d5, d6, d7, mainMenu);
     for (size_t i = 0; i < 4; i++) {
         pinMode(menuButtons[i], INPUT);
     }
 #endif
     charsetPosition = 0;
+
 }
 void loop() {
     // UpdateNTP(wifi_udp, &ntp, &rtc);
