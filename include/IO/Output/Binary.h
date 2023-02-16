@@ -2,7 +2,7 @@
 #define BINARY_H
 
 #include <Arduino.h>
-#include "../../interface/Home_Assistant/Output_struct.h"
+#include "interface/Home_Assistant/Output_struct.h"
 class Binary {
    private:
     //Output _out[4] = {{46, LOW,"ceiling"}, {48, LOW,"fan"}, {50, LOW,"idk"}, {52, LOW,"asd"}};

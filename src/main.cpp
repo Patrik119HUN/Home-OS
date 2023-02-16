@@ -1,76 +1,46 @@
-#include <Arduino.h>
-#include <ArduinoJson.h>
-#include <LibPrintf.h>
-#include <Scheduler.h>
+#include "defines.h"
 
-#include "IO/Output/Binary.h"
-#include "Splash_Screen.h"
-#include "helper/Log.h"
-#include "helper/button.h"
-#include "interface/configuration.h"
-#include "user_config.h"
-
-#ifdef WIFI_MODULE
-#include <WiFiEspAT.h>
-WiFiUDP wifi_udp;
-#include "helper/WiFi.h"
-#endif
-#ifdef ETHERNET_MODULE
-#include <Ethernet.h>
-#include <SPI.h>
-EthernetUDP ethernet_udp;
-#endif
-#ifdef SD_MODULE
-#include <SD.h>
-#include <SPI.h>
-#endif
-#ifdef RTC_MODULE
-#include <RTClib.h>
-#if defined WIFI_MODULE || ETHERNET_MODULE
-#include <NTPClient.h>
-
-#include "helper/NTP.h"
-#ifdef WIFI_MODULE
-NTPClient ntp(wifi_udp);
-#elif ETHERNET_MODULE
-NTPClient ntp(ethernet_udp);
-#else
-NTPClient ntp();
-#endif
-#endif
-RTC_DS3231 rtc;
-#endif
-#ifdef LCD_MODULE
-#define USE_STANDARD_LCD
-#include <LcdMenu.h>
-#include <LiquidCrystal.h>
-LcdMenu menu(LCD_ROWS, LCD_COLS);
-#include "menu/MainMenu.h"
-#endif
-Logger _log;
-
-unsigned long lastDebounceTime = 0;
-int lastVal[4] = {LOW};
-int buttonState[4];
+void onButtonCommand(HAButton* sender) {
+    if (sender == &buttonA) {
+        Serial.println("button A pressed");
+    } else if (sender == &buttonB) {
+        // button B was clicked, do your logic here
+        Serial.println("button B pressed");
+    }
+}
+void menuLoop();
 void setup() {
     Serial.begin(BAUD_RATE);
+    pinMode(36, OUTPUT);
+    pinMode(38, OUTPUT);
+
+    display.init();
+
     for (size_t i = 0; i < 9; i++) {
         Serial.println(Splash_screen[i]);
     }
     printf("\nVersion:\n\t %s\n", VERSION);
     printf("Built On:\n \t[Date]: %s\n\t[Time]: %s\n", __DATE__, __TIME__);
     printf("Made by:\n\tTukacs Patrik\n");
+#ifdef RTC_MODULE
+    while (!rtc.begin()) {
+        Serial.println(F("Failed to initialize RTC library"));
+        Serial.println(F("Retrying RTC initializaton!"));
+        delay(1000);
+        // ntp.begin();
+    }
 
+#endif
 #ifdef WIFI_MODULE
     Serial1.begin(115200);
-WIFI_BEGIN:
     WiFi.init(Serial1);
-    if (WiFi.status() == WL_NO_MODULE) {
-        Serial.println(F("Communication with WiFi module failed!"));
-        Serial.println(F("Retrying WIFI initializaton!"));
+    while (WiFi.status() == WL_NO_MODULE) {
+        _log.println("Communication with WiFi module failed!", LogLevel::ERROR, rtc.now());
+        _log.println("Retrying WIFI initializaton!", LogLevel::ERROR, rtc.now());
+        display.print(0b01011011);
         delay(1000);
-        goto WIFI_BEGIN;
     }
+    _log.println("WIFI initializaton OK!", LogLevel::ACK, rtc.now());
     byte mac[6];
     WiFi.macAddress(mac);
     printf("[Wi-Fi MAC]: \n\t");
@@ -78,50 +48,57 @@ WIFI_BEGIN:
     Serial.println();
     Serial.println("Scanning available networks...");
     listNetworks();
+#endif
+#ifdef SD_MODULE
+    pinMode(10, OUTPUT);     // change this to 53 on a mega  // don't follow this!!
+    digitalWrite(10, HIGH);  // Add this line
+    while (!SD.begin(SD_PIN)) {
+        _log.println("Failed to initialize SD library", LogLevel::ERROR, rtc.now());
+        _log.println("Retrying SD initializaton!", LogLevel::ERROR, rtc.now());
+        display.print(0b00000110);
+        delay(1000);
+    }
+    _log.println("SD initializaton OK!", LogLevel::ACK, rtc.now());
+    conf.begin();
+    conf.loadMQTT();
+    conf.loadWIFI();
+    mqtt.begin(conf._mqtt.server, conf._mqtt.username, conf._mqtt.password);
+#endif
+#ifdef LCD_MODULE
+    menu.setupLcdWithMenu(rs, rw, en, d0, d1, d2, d3, d4, d5, d6, d7, mainMenu);
+    for (size_t i = 0; i < 4; i++) {
+        pinMode(menuButtons[i], INPUT);
+    }
+    digitalWrite(38, HIGH);
+    lcdTurnedOn = millis();
+#endif
     if (WiFi.begin("Wi-Fi", "Asdfghjkl12") == WL_CONNECTED) {
         printf(
             "\nSuccesfully connected to:\n\t[SSID]:%s\n\t[Password]:%s\n", "Wi-Fi", "Asdfghjkl12"
         );
     }
-#endif
-#ifdef SD_MODULE
-SD_BEGIN:
-    if (!SD.begin(SD_PIN)) {
-        Serial.println(F("Failed to initialize SD library"));
-        Serial.println(F("Retrying SD initializaton!"));
-        delay(1000);
-        goto SD_BEGIN;
-    }
-    conf.begin();
-    conf.loadMQTT();
-    conf.loadWIFI();
-#endif
-#ifdef RTC_MODULE
-RTC_BEGIN:
-    if (!rtc.begin()) {
-        Serial.println(F("Failed to initialize RTC library"));
-        Serial.println(F("Retrying RTC initializaton!"));
-        delay(1000);
-        goto RTC_BEGIN;
-        // ntp.begin();
-    }
+    device.setName("HomeOS");
+    device.setSoftwareVersion(VERSION);
 
-#endif
-#ifdef LCD_MODULE
+    // optional properties
+    buttonA.setIcon("mdi:fire");
+    buttonA.setName("Click me A");
+    buttonB.setIcon("mdi:home");
+    buttonB.setName("Click me B");
+
+    // press callbacks
+    buttonA.onCommand(onButtonCommand);
+    buttonB.onCommand(onButtonCommand);
     
-    menu.setupLcdWithMenu(rs, rw, en, d0, d1, d2, d3, d4, d5, d6, d7, mainMenu);
-    for (size_t i = 0; i < 4; i++) {
-        pinMode(menuButtons[i], INPUT);
-    }
-#endif
-    charsetPosition = 0;
-
+    Scheduler.startLoop(menuLoop);
+    display.clear();
 }
 void loop() {
+    mqtt.loop();
+    yield();
     // UpdateNTP(wifi_udp, &ntp, &rtc);
 
     // ntp.update();
-    // DateTime time = rtc.now();
     //_log.println("hello", ACK);
     //   if (WiFi.begin("Wi-Fi", "Asdfghjkl12") == WL_CONNECTED) {
     //      printf(
@@ -129,6 +106,8 @@ void loop() {
     //          "Asdfghjkl12"
     //      );
     //  }
+}
+void menuLoop() {
     for (size_t i = 0; i < 4; i++) {
         buttonVal[i] = digitalRead(menuButtons[i]);
         if (buttonVal[i] != lastVal[i]) {
@@ -140,7 +119,8 @@ void loop() {
         for (size_t i = 0; i < 4; i++) {
             if (buttonVal[i] != buttonState[i]) {
                 buttonState[i] = buttonVal[i];
-                if (buttonState[i] == HIGH) {
+                digitalWrite(38, HIGH);
+                if (buttonState[i] == HIGH && ((millis() - lcdTurnedOn) < 5 * 1000)) {
                     switch (i) {
                         case 0:
                             menu.up();
@@ -155,23 +135,24 @@ void loop() {
                             menu.back();
                             break;
                     }
+                    digitalWrite(36, HIGH);
+                    delay(100);
+                    digitalWrite(36, LOW);
                 }
+                lcdTurnedOn = millis();
             }
         }
+    }
+    if ((millis() - lcdTurnedOn) > 5 * 1000) {
+        digitalWrite(38, LOW);
     }
     char command = Serial.read();
 
     switch (command) {
         case UP:
-            if (menu.isInEditMode())  // Update the position only in edit mode
-                charsetPosition = (charsetPosition + 1) % CHARSET_SIZE;
-            menu.drawChar(charset[charsetPosition]);  // Works only in edit mode
             menu.up();
             break;
         case DOWN:
-            if (menu.isInEditMode())  // Update the position only in edit mode
-                charsetPosition = constrain(charsetPosition - 1, 0, CHARSET_SIZE);
-            menu.drawChar(charset[charsetPosition]);  // Works only in edit mode
             menu.down();
             break;
         case LEFT:
@@ -180,8 +161,7 @@ void loop() {
         case RIGHT:
             menu.right();
             break;
-        case ENTER:                               // Press enter to go to edit mode : for ItemInput
-            menu.type(charset[charsetPosition]);  // Works only in edit mode
+        case ENTER:  // Press enter to go to edit mode : for ItemInput
             menu.enter();
             break;
         case BACK:
@@ -199,5 +179,5 @@ void loop() {
     for (size_t i = 0; i < 4; i++) {
         lastVal[i] = buttonVal[i];
     }
-    
+    yield();
 }

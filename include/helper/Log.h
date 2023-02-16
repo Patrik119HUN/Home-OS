@@ -15,7 +15,7 @@ class Logger {
 
    public:
 #ifdef RTC_MODULE
-    void println(const char* message, const LogLevel& messageType, DateTime _time) {
+    void print(const char* message, const LogLevel& messageType, DateTime _time) {
         sprintf(
             Date_Time, "%u-%02u-%02uT%02u:%02u:%02u", _time.year(), _time.month(), _time.day(), _time.hour(),
             _time.minute(), _time.second()
@@ -44,7 +44,11 @@ class Logger {
             default:
                 break;
         }
-        printf("%s\n", message);
+        printf("%s", message);
+    }
+    void println(const char* message, const LogLevel& messageType, DateTime _time){
+        print(message,messageType,_time);
+        printf("\n");
     }
 };
 

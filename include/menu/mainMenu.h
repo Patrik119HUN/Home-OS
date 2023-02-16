@@ -4,7 +4,6 @@
 #include <LcdMenu.h>
 #include <generatemenu.h>
 
-#include "Outputs/Outputs.h"
 #include "Settings/Settings.h"
 
 void inputCallback(String value);
