@@ -1,5 +1,5 @@
 #include "defines.h"
-
+Button proba(30);
 void onButtonCommand(HAButton* sender) {
     if (sender == &buttonA) {
         Serial.println("button A pressed");
@@ -13,7 +13,7 @@ void setup() {
     Serial.begin(BAUD_RATE);
     pinMode(36, OUTPUT);
     pinMode(38, OUTPUT);
-
+    proba.begin();
     display.init();
 
     for (size_t i = 0; i < 9; i++) {
@@ -50,8 +50,8 @@ void setup() {
     listNetworks();
 #endif
 #ifdef SD_MODULE
-    pinMode(10, OUTPUT);     // change this to 53 on a mega  // don't follow this!!
-    digitalWrite(10, HIGH);  // Add this line
+    pinMode(SD_PIN, OUTPUT);     // change this to 53 on a mega  // don't follow this!!
+    digitalWrite(SD_PIN, HIGH);  // Add this line
     while (!SD.begin(SD_PIN)) {
         _log.println("Failed to initialize SD library", LogLevel::ERROR, rtc.now());
         _log.println("Retrying SD initializaton!", LogLevel::ERROR, rtc.now());
@@ -65,12 +65,7 @@ void setup() {
     mqtt.begin(conf._mqtt.server, conf._mqtt.username, conf._mqtt.password);
 #endif
 #ifdef LCD_MODULE
-    menu.setupLcdWithMenu(rs, rw, en, d0, d1, d2, d3, d4, d5, d6, d7, mainMenu);
-    for (size_t i = 0; i < 4; i++) {
-        pinMode(menuButtons[i], INPUT);
-    }
-    digitalWrite(38, HIGH);
-    lcdTurnedOn = millis();
+    menu.begin(mainMenu);
 #endif
     if (WiFi.begin("Wi-Fi", "Asdfghjkl12") == WL_CONNECTED) {
         printf(
@@ -89,7 +84,7 @@ void setup() {
     // press callbacks
     buttonA.onCommand(onButtonCommand);
     buttonB.onCommand(onButtonCommand);
-    
+
     Scheduler.startLoop(menuLoop);
     display.clear();
 }
@@ -99,85 +94,9 @@ void loop() {
     // UpdateNTP(wifi_udp, &ntp, &rtc);
 
     // ntp.update();
-    //_log.println("hello", ACK);
-    //   if (WiFi.begin("Wi-Fi", "Asdfghjkl12") == WL_CONNECTED) {
-    //      printf(
-    //          "\nSuccesfully connected to:\n\t[SSID]:%s\n\t[Password]:%s\n", "Wi-Fi",
-    //          "Asdfghjkl12"
-    //      );
-    //  }
 }
+
 void menuLoop() {
-    for (size_t i = 0; i < 4; i++) {
-        buttonVal[i] = digitalRead(menuButtons[i]);
-        if (buttonVal[i] != lastVal[i]) {
-            lastDebounceTime = millis();
-        }
-    }
-
-    if ((millis() - lastDebounceTime) > interval) {
-        for (size_t i = 0; i < 4; i++) {
-            if (buttonVal[i] != buttonState[i]) {
-                buttonState[i] = buttonVal[i];
-                digitalWrite(38, HIGH);
-                if (buttonState[i] == HIGH && ((millis() - lcdTurnedOn) < 5 * 1000)) {
-                    switch (i) {
-                        case 0:
-                            menu.up();
-                            break;
-                        case 1:
-                            menu.down();
-                            break;
-                        case 2:
-                            menu.enter();
-                            break;
-                        case 3:
-                            menu.back();
-                            break;
-                    }
-                    digitalWrite(36, HIGH);
-                    delay(100);
-                    digitalWrite(36, LOW);
-                }
-                lcdTurnedOn = millis();
-            }
-        }
-    }
-    if ((millis() - lcdTurnedOn) > 5 * 1000) {
-        digitalWrite(38, LOW);
-    }
-    char command = Serial.read();
-
-    switch (command) {
-        case UP:
-            menu.up();
-            break;
-        case DOWN:
-            menu.down();
-            break;
-        case LEFT:
-            menu.left();
-            break;
-        case RIGHT:
-            menu.right();
-            break;
-        case ENTER:  // Press enter to go to edit mode : for ItemInput
-            menu.enter();
-            break;
-        case BACK:
-            menu.back();
-            break;
-        case CLEAR:
-            menu.clear();
-            break;
-        case BACKSPACE:  // Remove one character from tail
-            menu.backspace();
-            break;
-        default:
-            break;
-    }
-    for (size_t i = 0; i < 4; i++) {
-        lastVal[i] = buttonVal[i];
-    }
+    menu.menuLoop();
     yield();
 }

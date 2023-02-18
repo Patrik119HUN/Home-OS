@@ -1,14 +1,14 @@
-#ifndef sevseg_h
-#define sevseg_h
+#ifndef SevenSegment_h
+#define SevenSegment_h
 
 #include <Arduino.h>
 #define ARRAY_SIZE 8
-class sevseg {
+class SevenSegment {
    private:
     uint32_t pins[ARRAY_SIZE];
 
    public:
-    sevseg(
+    SevenSegment(
         uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e, uint32_t f, uint32_t g,
         uint32_t dp
     ) {
@@ -38,4 +38,4 @@ class sevseg {
         }
     }
 };
-#endif  // sevseg
+#endif  // SevenSegment
