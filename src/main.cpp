@@ -97,6 +97,6 @@ void loop() {
 }
 
 void menuLoop() {
-    menu.menuLoop();
+    menu.loop();
     yield();
 }

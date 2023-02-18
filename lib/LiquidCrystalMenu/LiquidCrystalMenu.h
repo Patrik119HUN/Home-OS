@@ -31,7 +31,7 @@ class LiquidCrystalMenu : LcdMenu, Buzzer {
     LiquidCrystalMenu(uint8_t maxRows, uint8_t maxCols, uint32_t buzzerPin)
         : LcdMenu(maxRows, maxCols), Buzzer(buzzerPin) {}
     void begin(MenuItem* mainMenu);
-    void menuLoop();
+    void loop();
 };
 
 #endif  // LIQUIDCRYSTALMENU_H

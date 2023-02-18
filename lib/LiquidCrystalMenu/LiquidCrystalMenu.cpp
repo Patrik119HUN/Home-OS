@@ -25,7 +25,7 @@ void LiquidCrystalMenu::turnOffBacklight(unsigned long time) {
     }
 }
 
-void LiquidCrystalMenu::menuLoop() {
+void LiquidCrystalMenu::loop() {
     for (size_t i = 0; i < 4; i++) {
         if (_button[i].press() == HIGH) {
             digitalWrite(_lcdBackLightPin, HIGH);
