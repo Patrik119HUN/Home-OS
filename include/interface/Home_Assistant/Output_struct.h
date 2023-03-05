@@ -5,7 +5,7 @@
 #include <RTClib.h>
 struct Output{
     const uint32_t pin;
-    boolean state;
+    bool state;
     const char* name;
     uint32_t lastUpadateTime;
     void toggle() {

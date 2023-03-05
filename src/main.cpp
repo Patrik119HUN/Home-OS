@@ -1,5 +1,4 @@
 #include "defines.h"
-Button proba(30);
 void onButtonCommand(HAButton* sender) {
     if (sender == &buttonA) {
         Serial.println("button A pressed");
@@ -11,11 +10,7 @@ void onButtonCommand(HAButton* sender) {
 void menuLoop();
 void setup() {
     Serial.begin(BAUD_RATE);
-    pinMode(36, OUTPUT);
-    pinMode(38, OUTPUT);
-    proba.begin();
-    display.init();
-
+    //display.init();
     for (size_t i = 0; i < 9; i++) {
         Serial.println(Splash_screen[i]);
     }
@@ -35,9 +30,9 @@ void setup() {
     Serial1.begin(115200);
     WiFi.init(Serial1);
     while (WiFi.status() == WL_NO_MODULE) {
-        _log.println("Communication with WiFi module failed!", LogLevel::ERROR, rtc.now());
-        _log.println("Retrying WIFI initializaton!", LogLevel::ERROR, rtc.now());
-        display.print(0b01011011);
+        _log.println("Communication with WiFi module failed!", LogLevel::FAULT, rtc.now());
+        _log.println("Retrying WIFI initializaton!", LogLevel::FAULT, rtc.now());
+        //display.print(0b01011011);
         delay(1000);
     }
     _log.println("WIFI initializaton OK!", LogLevel::ACK, rtc.now());
@@ -53,9 +48,9 @@ void setup() {
     pinMode(SD_PIN, OUTPUT);     // change this to 53 on a mega  // don't follow this!!
     digitalWrite(SD_PIN, HIGH);  // Add this line
     while (!SD.begin(SD_PIN)) {
-        _log.println("Failed to initialize SD library", LogLevel::ERROR, rtc.now());
-        _log.println("Retrying SD initializaton!", LogLevel::ERROR, rtc.now());
-        display.print(0b00000110);
+        _log.println("Failed to initialize SD library", LogLevel::FAULT, rtc.now());
+        _log.println("Retrying SD initializaton!", LogLevel::FAULT, rtc.now());
+        //display.print(0b00000110);
         delay(1000);
     }
     _log.println("SD initializaton OK!", LogLevel::ACK, rtc.now());
@@ -66,12 +61,13 @@ void setup() {
 #endif
 #ifdef LCD_MODULE
     menu.begin(mainMenu);
+    menu.setLCDPins(rs,rw,en,d0,d1,d2,d3,d4,d5,d6,d7,lcdBackLightPin);
 #endif
-    if (WiFi.begin("Wi-Fi", "Asdfghjkl12") == WL_CONNECTED) {
-        printf(
-            "\nSuccesfully connected to:\n\t[SSID]:%s\n\t[Password]:%s\n", "Wi-Fi", "Asdfghjkl12"
-        );
-    }
+    //if (WiFi.begin("Wi-Fi", "Asdfghjkl12") == WL_CONNECTED) {
+    //    printf(
+    //        "\nSuccesfully connected to:\n\t[SSID]:%s\n\t[Password]:%s\n", "Wi-Fi", "Asdfghjkl12"
+    //    );
+    //}
     device.setName("HomeOS");
     device.setSoftwareVersion(VERSION);
 
@@ -86,13 +82,12 @@ void setup() {
     buttonB.onCommand(onButtonCommand);
 
     Scheduler.startLoop(menuLoop);
-    display.clear();
+    //display.clear();
 }
 void loop() {
     mqtt.loop();
     yield();
     // UpdateNTP(wifi_udp, &ntp, &rtc);
-
     // ntp.update();
 }
 

@@ -38,9 +38,10 @@ void LiquidCrystalMenu::loop() {
 
 void LiquidCrystalMenu::begin(MenuItem* mainMenu) {
     Buzzer::begin();
+    pinMode(_lcdBackLightPin, OUTPUT);
     for (size_t i = 0; i < 4; i++) {
         _button[i].begin();
     }
     lcdTurnedOn = millis();
-    setupLcdWithMenu(rs, rw, en, d0, d1, d2, d3, d4, d5, d6, d7, mainMenu);
+    setupLcdWithMenu(_rs, _rw, _en, _d0, _d1, _d2, _d3, _d4, _d5, _d6, _d7, mainMenu);
 }

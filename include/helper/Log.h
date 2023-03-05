@@ -6,7 +6,7 @@
 #ifdef RTC_MODULE
 #include <RTClib.h>
 #endif
-enum LogLevel { DEBUG, ERROR, WARNING, ACK };
+enum LogLevel { DEBUG, FAULT, WARNING, ACK };
 class Logger {
    private:
     char Date_Time[27];
@@ -25,7 +25,7 @@ class Logger {
     void println(const char* message, const LogLevel& messageType) {
 #endif
         switch (messageType) {
-            case ERROR:
+            case FAULT:
                 printf("[%sError%s]:", "\e[0;31m", "\e[0;37m");
                 // sprintf(messageBuffer, "[%-*s][Error]:%s", 19, Date_Time, message);
                 break;
