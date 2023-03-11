@@ -1,0 +1,7 @@
+{
+    "files.exclude": {
+        "**/.pio/build": true,
+        "**/.vs": true,
+        "**/.vscode": true
+    }
+}

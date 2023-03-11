@@ -2,10 +2,8 @@
 #define Log_h
 
 #include <Arduino.h>
+#include <EpochToDate.h>
 #include <LibPrintf.h>
-#ifdef RTC_MODULE
-#include <RTClib.h>
-#endif
 enum LogLevel { DEBUG, FAULT, WARNING, ACK };
 class Logger {
    private:
@@ -15,10 +13,11 @@ class Logger {
 
    public:
 #ifdef RTC_MODULE
-    void print(const char* message, const LogLevel& messageType, DateTime _time) {
+    void print(const char* message, const LogLevel& messageType, time_t _time) {
+        EpochToDate ep(_time);
         sprintf(
-            Date_Time, "%u-%02u-%02uT%02u:%02u:%02u", _time.year(), _time.month(), _time.day(), _time.hour(),
-            _time.minute(), _time.second()
+            Date_Time, "%u-%02u-%02uT%02u:%02u:%02u", ep.getYear(), ep.getMonth(), ep.getDay(),
+            ep.getHours(), ep.getMinutes(), ep.getSeconds()
         );
         printf("%s[%-*s]", "\e[0;37m", 19, Date_Time);
 #else
@@ -46,8 +45,8 @@ class Logger {
         }
         printf("%s", message);
     }
-    void println(const char* message, const LogLevel& messageType, DateTime _time){
-        print(message,messageType,_time);
+    void println(const char* message, const LogLevel& messageType, time_t _time) {
+        print(message, messageType, _time);
         printf("\n");
     }
 };

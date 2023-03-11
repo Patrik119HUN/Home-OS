@@ -27,15 +27,14 @@ void setup() {
 
 #endif
 #ifdef WIFI_MODULE
-    Serial1.begin(115200);
-    WiFi.init(Serial1);
+    WiFi.setPins(SPIWIFI_SS, SPIWIFI_ACK, ESP32_RESETN, ESP32_GPIO0, &SPIWIFI);
     while (WiFi.status() == WL_NO_MODULE) {
-        _log.println("Communication with WiFi module failed!", LogLevel::FAULT, rtc.now());
-        _log.println("Retrying WIFI initializaton!", LogLevel::FAULT, rtc.now());
+        _log.println("Communication with WiFi module failed!", LogLevel::FAULT, rtc.getEpochTime());
+        _log.println("Retrying WIFI initializaton!", LogLevel::FAULT, rtc.getEpochTime());
         //display.print(0b01011011);
         delay(1000);
     }
-    _log.println("WIFI initializaton OK!", LogLevel::ACK, rtc.now());
+    _log.println("WIFI initializaton OK!", LogLevel::ACK, rtc.getEpochTime());
     byte mac[6];
     WiFi.macAddress(mac);
     printf("[Wi-Fi MAC]: \n\t");
@@ -48,12 +47,12 @@ void setup() {
     pinMode(SD_PIN, OUTPUT);     // change this to 53 on a mega  // don't follow this!!
     digitalWrite(SD_PIN, HIGH);  // Add this line
     while (!SD.begin(SD_PIN)) {
-        _log.println("Failed to initialize SD library", LogLevel::FAULT, rtc.now());
-        _log.println("Retrying SD initializaton!", LogLevel::FAULT, rtc.now());
+        _log.println("Failed to initialize SD library", LogLevel::FAULT, rtc.getEpochTime());
+        _log.println("Retrying SD initializaton!", LogLevel::FAULT, rtc.getEpochTime());
         //display.print(0b00000110);
         delay(1000);
     }
-    _log.println("SD initializaton OK!", LogLevel::ACK, rtc.now());
+    _log.println("SD initializaton OK!", LogLevel::ACK, rtc.getEpochTime());
     conf.begin();
     conf.loadMQTT();
     conf.loadWIFI();
@@ -81,17 +80,17 @@ void setup() {
     buttonA.onCommand(onButtonCommand);
     buttonB.onCommand(onButtonCommand);
 
-    Scheduler.startLoop(menuLoop);
+    //Scheduler.startLoop(menuLoop);
     //display.clear();
 }
 void loop() {
     mqtt.loop();
-    yield();
+    //yield();
+    menu.loop();
     // UpdateNTP(wifi_udp, &ntp, &rtc);
     // ntp.update();
 }
 
 void menuLoop() {
-    menu.loop();
-    yield();
+    //yield();
 }

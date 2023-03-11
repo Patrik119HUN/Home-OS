@@ -16,7 +16,7 @@ class Button {
     unsigned long debounceDelay = 50;
 
    public:
-    Button(uint32_t buttonPin) { _buttonPin = buttonPin; }
+    Button(uint32_t buttonPin) : _buttonPin(buttonPin){};
 
     void begin() { pinMode(_buttonPin, INPUT); }
 
@@ -38,7 +38,7 @@ class Button {
         if (state() == HIGH && (millis() - _lastPressTime > _pressTimeDelay)) {
             _lastPressTime = millis();
             return HIGH;
-        }else{
+        } else {
             return LOW;
         }
     }

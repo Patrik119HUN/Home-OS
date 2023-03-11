@@ -1,7 +1,13 @@
-#ifndef WiFi_h
-#define WiFi_h
+#ifndef WiFiHelper_h
+#define WiFiHelper_h
 #include <Arduino.h>
+
+#ifdef ARDUINO_SAM_DUE
 #include <WiFiEspAT.h>
+#elif STM32F0xx
+#include <WiFiNINA.h>
+#endif
+
 
 void printMacAddress(byte mac[]);
 const char* EncryptionType(int thisType);

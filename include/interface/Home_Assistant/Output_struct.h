@@ -2,7 +2,6 @@
 #define Output_struct_h
 
 #include <Arduino.h>
-#include <RTClib.h>
 struct Output{
     const uint32_t pin;
     bool state;

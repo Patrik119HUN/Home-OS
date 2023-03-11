@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include <LcdMenu.h>
-#include "Time/Time.h"
+#include "Time/TimeSettings.h"
 #include "Network/Network.h"
 #include "MQTT/MQTTSettings.h"
 #include "../mainMenu.h"

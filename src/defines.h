@@ -1,35 +1,45 @@
-#ifndef defines_h
-#define defines_h
+#ifndef DEFINES_H
+#define DEFINES_H
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <LibPrintf.h>
-#include <Scheduler.h>
 
-#include "IO/Output/Binary.h"
+// #include <Scheduler.h>
+
+#include "./pins/pins.h"
 #include "SevenSegment.h"
 #include "Splash_Screen.h"
 #include "helper/Log.h"
 #include "interface/configuration.h"
 #include "user_config.h"
-#include "./pins/pins.h"
 
 #ifdef WIFI_MODULE
+#ifdef ARDUINO_SAM_DUE
 #include <WiFiEspAT.h>
-WiFiUDP wifi_udp;
-#include "helper/WiFi.h"
+#elif STM32F0xx
+#include "WiFiNINA.h"
+#include "WiFiUdp.h"
 #endif
+WiFiUDP wifi_udp;
+#include "helper/WiFiHelper.h"
+#endif
+
 #ifdef ETHERNET_MODULE
 #include <Ethernet.h>
 #include <SPI.h>
 EthernetUDP ethernet_udp;
 #endif
+
 #ifdef SD_MODULE
 #include <SD.h>
 #include <SPI.h>
 #endif
+
 #ifdef RTC_MODULE
-#include <RTClib.h>
+#include "interface/Time/TimeWrapper.h"
+#endif
+
 #if defined WIFI_MODULE || ETHERNET_MODULE
 #include <ArduinoHA.h>
 #include <NTPClient.h>
@@ -37,7 +47,7 @@ EthernetUDP ethernet_udp;
 #include "helper/NTP.h"
 #ifdef WIFI_MODULE
 NTPClient ntp(wifi_udp);
-WiFiClient client;
+WiFiSSLClient client;
 HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(client, device);
 
@@ -51,10 +61,12 @@ NTPClient ntp(ethernet_udp);
 NTPClient ntp();
 #endif
 #endif
-RTC_DS3231 rtc;
-#endif
+
+TimeWrapper rtc;
+
 #ifdef LCD_MODULE
 #include <LiquidCrystalMenu.h>
+
 #include "menu/mainMenu.h"
 LiquidCrystalMenu menu(LCD_ROWS, LCD_COLS, BuzzerPin);
 #endif
@@ -63,4 +75,5 @@ LiquidCrystalMenu menu(LCD_ROWS, LCD_COLS, BuzzerPin);
 SevenSegment display(a, b, c, d, e, f, g, dp);
 #endif
 Logger _log;
-#endif  // defines
+
+#endif  // DEFINES_H

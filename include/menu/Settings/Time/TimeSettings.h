@@ -1,5 +1,5 @@
-#ifndef Time_h
-#define Time_h
+#ifndef TimeSettings_h
+#define TimeSettings_h
 
 #include <Arduino.h>
 #include <LcdMenu.h>
